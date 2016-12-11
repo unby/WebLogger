@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Logger.Tests
+namespace WebLogger.Comparer
 {
     public class EquelsResult
     {

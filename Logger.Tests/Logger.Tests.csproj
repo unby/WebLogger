@@ -37,14 +37,21 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EquelsResult.cs" />
-    <Compile Include="Exten.cs" />
-    <Compile Include="PersonFlat.cs" />
-    <Compile Include="TestClass.cs" />
+    <Compile Include="Comparer\TestListComparer.cs" />
+    <Compile Include="Comparer\TestType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WebLogger\WebLogger.csproj">
+      <Project>{59A0CA43-709D-49B8-97D5-048307CC63B0}</Project>
+      <Name>WebLogger</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Logger\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

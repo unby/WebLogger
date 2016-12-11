@@ -1,6 +1,6 @@
-﻿namespace Logger.Tests
+﻿namespace Logger.Tests.Comparer
 {
-    public class PersonFlat
+    public class TestType
     {
         public string Name { get; set; }
         public string LastName;

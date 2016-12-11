@@ -1,15 +1,10 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Logger.Tests
+namespace WebLogger.Comparer
 {
     public class Comparer<TLeft, TRight>
     {
@@ -128,7 +123,6 @@ namespace Logger.Tests
                         throw new ArgumentException("Not correct type condition " + body.NodeType.ToString());
                     case ExpressionType.GreaterThanOrEqual:
                     case ExpressionType.LessThanOrEqual:
-                    
                     case ExpressionType.Equal:
                         var bodyE = ((BinaryExpression) body);
                         return new EquelsResult(GetMemberName(bodyE.Left), GetValue(bodyE.Left, l),
@@ -151,77 +145,6 @@ namespace Logger.Tests
             }
 
             throw new ArgumentException("Expression not found " + expression.ToString());
-        }
-    }
-
-    public class ListComparer<TLeft, TRight>  
-    {
-        private IEnumerable<TLeft> Lefts;
-        private IEnumerable<TRight> Rights;
-        readonly List<Comparer<TLeft, TRight>> Сonditions=new List<Comparer<TLeft, TRight>>();
-        public ListComparer(IEnumerable<TLeft> left, IEnumerable<TRight> right)
-        {
-            Lefts = left;
-            Rights = right;
-        }
-
-        public bool Check()
-        {
-            if(Lefts.Count()!=Rights.Count())
-                throw new IndexOutOfRangeException("Списки неравны");
-            if(!Lefts.Any())
-                throw new IndexOutOfRangeException("Списки пусты");
-            var tempL = Lefts.ToList();
-            var tempR = Rights.ToList();
-            foreach (var lItem in Lefts)
-            {
-                foreach (var rItem in Rights)
-                {
-                    if (!Сonditions.All(a => a.Compare(lItem, rItem).Result))
-                        continue;
-                    tempL.Remove(lItem);
-                    tempR.Remove(rItem);
-                }
-            }
-            if (!tempL.Any() && !tempR.Any())
-                return true;
-
-            return false;
-        }
-        public void AddCustomComparer(Comparer<TLeft, TRight> condition)
-        {
-            Сonditions.Add(condition);
-        }
-
-
-        public void AddCondition(Expression<Func<TLeft, TRight, bool>> condition)
-        {
-            Сonditions.Add(new Comparer<TLeft, TRight>(condition));
-        }
-    }
-
-    [TestFixture]
-    public class TestListComparer
-    {
-        [Test]
-        public void TestMethod()
-        {
-            List<PersonFlat> l = new List<PersonFlat>()
-            {
-                new PersonFlat() {LastName = "ss2", Name = "NN2", AmountFlat = 426.5},
-                new PersonFlat() {LastName = "gg4", Name = "tr3", AmountFlat = 456.5}
-            };
-            List<AmountPerson> r = new List<AmountPerson>()
-            {
-                new AmountPerson() {LastName = "ss2", Name = "NN2", Account = new Account() {Amount = 426.5}},
-                new AmountPerson() {LastName = "gg4", Name = "tr3", Account = new Account() {Amount = 456.5}}
-            };
-
-            var t = new ListComparer<PersonFlat, AmountPerson>(l, r);
-            t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() != z.Name.ToUpper());
-        //    t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
-        //    t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
-            Assert.IsTrue(t.Check());
         }
     }
 }

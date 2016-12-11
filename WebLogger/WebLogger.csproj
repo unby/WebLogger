@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlGenerator, Version=1.0.15.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Users\ekb_s\Documents\NugetRepository\HtmlGenerator.1.0.15\lib\net45\HtmlGenerator.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,16 +46,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ILogStore.cs" />
-    <Compile Include="LogRecord.cs" />
-    <Compile Include="BaseType.cs" />
-    <Compile Include="LogSession.cs" />
+    <Compile Include="Comparer\Comparer.cs" />
+    <Compile Include="Comparer\EquelsResult.cs" />
+    <Compile Include="Comparer\Exten.cs" />
+    <Compile Include="Comparer\ListComparer.cs" />
+    <Compile Include="Logger\ILogStore.cs" />
+    <Compile Include="Logger\LogRecord.cs" />
+    <Compile Include="Logger\BaseType.cs" />
+    <Compile Include="Logger\LogSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

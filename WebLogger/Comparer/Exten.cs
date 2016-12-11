@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Logger.Tests
+namespace WebLogger.Comparer
 {
     public static class Exten
     {
