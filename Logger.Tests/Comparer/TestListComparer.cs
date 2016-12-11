@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using WebLogger.Comparer;
 
@@ -18,13 +19,13 @@ namespace Logger.Tests.Comparer
             List<AmountPerson> r = new List<AmountPerson>()
             {
                 new AmountPerson() {LastName = "ss2", Name = "NN2", Account = new Account() {Amount = 426.5}},
-                new AmountPerson() {LastName = "gg4", Name = "tr3", Account = new Account() {Amount = 456.5}}
+                new AmountPerson() {LastName = "gg4", Name = "2tr3", Account = new Account() {Amount = 456.5}}
             };
 
             var t = new ListComparer<TestType, AmountPerson>(l, r);
-            t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() != z.Name.ToUpper());
-            //    t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
-            //    t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
+            t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() == z.Name.ToUpper());
+            t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
+            t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
             Assert.IsTrue(t.Check());
         }
     }
