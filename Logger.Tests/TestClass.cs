@@ -11,34 +11,6 @@ using System.Threading.Tasks;
 
 namespace Logger.Tests
 {
-    public class EquelsResult
-    {
-        public EquelsResult(string leftName, string leftValue, string rightName, string rigtValue, string condition,
-            bool result)
-        {
-            LeftName = leftName;
-            LeftValue = leftValue;
-            RightName = rightName;
-            RigtValue = rigtValue;
-            Condition = condition;
-            Result = result;
-            Console.WriteLine(ToString());
-        }
-
-        public string LeftName { get; set; }
-        public string LeftValue { get; set; }
-        public string RightName { get; set; }
-        public string RigtValue { get; set; }
-        public string Condition { get; set; }
-        public bool Result { get; private set; }
-
-        public override string ToString()
-        {
-            return string.Format("{0} '{1}' {5}{2} {3} '{4}'", LeftName, LeftValue, Condition, RightName, RigtValue,
-                Result ? "" : "!");
-        }
-    }
-
     public class Comparer<TLeft, TRight>
     {
         public Comparer(Expression<Func<TLeft, TRight, bool>> сondition)
@@ -47,17 +19,8 @@ namespace Logger.Tests
         }
 
         readonly Expression<Func<TLeft, TRight, bool>> _сondition;
-        private string _getValue(Expression expression,object obj)
-        {
-            var objectMember = Expression.Convert(expression, typeof(object));
 
-            var getterLambda = Expression.Lambda<Func<object,object>>(objectMember);
-
-            var getter = getterLambda.Compile()(obj);
-
-            return getter.ToString();
-        }
-        protected virtual string GetValue(Expression member, object obj)
+        protected string GetValue(Expression member, object obj)
         {
             var path = member.ToString().Split('.');
             var subobj = obj;
@@ -72,16 +35,16 @@ namespace Logger.Tests
                 if (mInfo == null)
                 {
                     var mName = path[i].Substring(0, path[i].IndexOf('('));
-                    Type t= subobj.GetType();
+                    Type t = subobj.GetType();
                     mInfo = t.GetMethods().First(p => p.Name == mName);
                 }
-            
-            if (mInfo != null)
+
+                if (mInfo != null)
                 {
                     var propertyInfo = mInfo as PropertyInfo;
                     if (propertyInfo != null)
                     {
-                       // subExpression = ((MemberExpression) subExpression).Expression;
+                        // subExpression = ((MemberExpression) subExpression).Expression;
                         subobj = propertyInfo.GetValue(subobj);
                         continue;
                     }
@@ -89,7 +52,7 @@ namespace Logger.Tests
                     if (fieldInfo != null)
                     {
                         subobj = fieldInfo.GetValue(subobj);
-                      //  subExpression = ((MemberExpression)subExpression).Expression;
+                        //  subExpression = ((MemberExpression)subExpression).Expression;
                         continue;
                     }
                     var methodInfo = mInfo as MethodInfo;
@@ -113,28 +76,28 @@ namespace Logger.Tests
             MethodCallExpression n = (MethodCallExpression) member;
             while (n.NodeType == ExpressionType.Call)
             {
-              
+
                 result.Add(new Tuple<MethodInfo, object[]>(n.Method,
                     n.Arguments.Select(c =>
                         c is ConstantExpression
                             ? ((ConstantExpression) c).Value
                             : null).ToArray()));
-                if(n.Object.NodeType!=ExpressionType.Call)
+                if (n.Object.NodeType != ExpressionType.Call)
                     break;
-                n = (MethodCallExpression)n.Object;
+                n = (MethodCallExpression) n.Object;
             }
             result.Reverse();
             return result;
         }
+
         string GetMemberName(Expression member)
         {
-            List<Tuple<MethodInfo, object[]>> result = new List<Tuple<MethodInfo, object[]>>();
             if (member is MemberExpression)
-                return ((MemberExpression)member).Member.Name;
-            Expression n =member;
+                return ((MemberExpression) member).Member.Name;
+            Expression n = member;
             while (n.NodeType != ExpressionType.MemberAccess)
             {
-                
+
                 n = ((MethodCallExpression) n).Object;
                 if (n is MemberExpression)
                 {
@@ -146,37 +109,45 @@ namespace Logger.Tests
 
         public EquelsResult Compare(TLeft l, TRight r)
         {
-            Expression expression = _сondition;
-            MemberExpression propLeft = null;
-            MemberExpression propRight = null;
+            return Compare(l, r, _сondition);
+        }
+
+        protected virtual EquelsResult Compare(TLeft l, TRight r, Expression<Func<TLeft, TRight, bool>> condition)
+        {
+            Expression expression = condition;
+            Expression propLeft = null;
+            Expression propRight = null;
             if (expression is LambdaExpression)
             {
-                var body = ((LambdaExpression)expression).Body;
-               // Console.WriteLine(body.ToString());
+                var body = ((LambdaExpression) expression).Body;
                 Func<TLeft, TRight, bool> compiledExpression = _сondition.Compile();
-                
+
                 switch (body.NodeType)
                 {
+                    case ExpressionType.NotEqual:
+                        throw new ArgumentException("Not correct type condition " + body.NodeType.ToString());
+                    case ExpressionType.GreaterThanOrEqual:
+                    case ExpressionType.LessThanOrEqual:
+                    
                     case ExpressionType.Equal:
-                        var bodyE = ((BinaryExpression)body);
-                        //var propLeftValue = GetValue(bodyE.Left, l);
-                   //     propLeft = ((BinaryExpression)body).Left;
-                    //    propRight = (MemberExpression) ((BinaryExpression)body).Right;
+                        var bodyE = ((BinaryExpression) body);
                         return new EquelsResult(GetMemberName(bodyE.Left), GetValue(bodyE.Left, l),
-                            GetMemberName(bodyE.Right), GetValue(bodyE.Right, r), GetMemberName(bodyE.Right), compiledExpression(l, r));
+                            GetMemberName(bodyE.Right), GetValue(bodyE.Right, r), body.NodeType.ToString(),
+                            compiledExpression(l, r));
                     case ExpressionType.Call:
-                        var bodyC = ((MethodCallExpression)body);
-                        propLeft = (MemberExpression)bodyC.Arguments[0];
-                        propRight = (MemberExpression)bodyC.Arguments[1];
-                        return new EquelsResult(propLeft.Member.Name, GetValue(propLeft, l), propRight.Member.Name, GetValue(propRight, r), bodyC.Method.Name, compiledExpression(l, r));
+                        var bodyC = ((MethodCallExpression) body);
+                        propLeft = bodyC.Object == null ? bodyC.Arguments[0] : bodyC.Object;
+                        propRight = bodyC.Object == null ? bodyC.Arguments[1] : bodyC.Arguments[0];
+                        return new EquelsResult(GetMemberName(propLeft), GetValue(propLeft, l), GetMemberName(propRight),
+                            GetValue(propRight, r), bodyC.Method.Name, compiledExpression(l, r));
                     default:
-                       throw  new ArgumentException("Expression not found " +body.ToString());
+                        throw new ArgumentException("Expression not found " + body.ToString());
                 }
             }
             else if (expression is MethodCallExpression)
             {
-              
-               
+
+
             }
 
             throw new ArgumentException("Expression not found " + expression.ToString());
@@ -187,7 +158,7 @@ namespace Logger.Tests
     {
         private IEnumerable<TLeft> Lefts;
         private IEnumerable<TRight> Rights;
-        List<Comparer<TLeft, TRight>> Сonditions=new List<Comparer<TLeft, TRight>>();
+        readonly List<Comparer<TLeft, TRight>> Сonditions=new List<Comparer<TLeft, TRight>>();
         public ListComparer(IEnumerable<TLeft> left, IEnumerable<TRight> right)
         {
             Lefts = left;
@@ -217,42 +188,15 @@ namespace Logger.Tests
 
             return false;
         }
+        public void AddCustomComparer(Comparer<TLeft, TRight> condition)
+        {
+            Сonditions.Add(condition);
+        }
+
 
         public void AddCondition(Expression<Func<TLeft, TRight, bool>> condition)
         {
             Сonditions.Add(new Comparer<TLeft, TRight>(condition));
-        }
-
-    }
-
-    public class PersonFlat
-    {
-        public string Name { get; set; }
-        public string LastName;
-        public double AmountFlat { get; set; }
-        public int AccountNumber;
-    }
-    public class Account
-    {
-        public double Amount;
-        public int AccountNumber { get; set; }
-    }
-    public class AmounPerson
-    {
-        public string Name;
-        public string LastName { get; set; }
-        public Account Account { get;set; }
-    }
-    public static class Exten
-    {
-        public static string GetExpressionString<T>(Expression<Func<T, bool>> exp)
-    where T : class
-        {
-            return exp.Body.ToString();
-        }
-        public static bool EquelsDouble(this double left, double right)
-        {
-            return Math.Abs(left - right) < 0.001;
         }
     }
 
@@ -267,15 +211,16 @@ namespace Logger.Tests
                 new PersonFlat() {LastName = "ss2", Name = "NN2", AmountFlat = 426.5},
                 new PersonFlat() {LastName = "gg4", Name = "tr3", AmountFlat = 456.5}
             };
-            List<AmounPerson> r = new List<AmounPerson>()
+            List<AmountPerson> r = new List<AmountPerson>()
             {
-                new AmounPerson() {LastName = "ss2", Name = "NN2", Account = new Account() {Amount = 426.5}},
-                new AmounPerson() {LastName = "gg4", Name = "tr3", Account = new Account() {Amount = 456.5}}
+                new AmountPerson() {LastName = "ss2", Name = "NN2", Account = new Account() {Amount = 426.5}},
+                new AmountPerson() {LastName = "gg4", Name = "tr3", Account = new Account() {Amount = 456.5}}
             };
 
-            var t = new ListComparer<PersonFlat, AmounPerson>(l, r);
-            t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() == z.Name.ToUpper());
-             t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
+            var t = new ListComparer<PersonFlat, AmountPerson>(l, r);
+            t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() != z.Name.ToUpper());
+        //    t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
+        //    t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
             Assert.IsTrue(t.Check());
         }
     }
