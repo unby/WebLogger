@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using NUnit.Framework;
 using WebLogger.Comparer;
 
@@ -24,8 +25,12 @@ namespace Logger.Tests.Comparer
 
             var t = new ListComparer<TestType, AmountPerson>(l, r);
             t.AddCondition((x, z) => x.Name.Trim('%').ToLower().ToUpper() == z.Name.ToUpper());
-            t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
-            t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
+           // t.AddCondition((x, z) => x.Name.Equals(z.Name, StringComparison.OrdinalIgnoreCase));
+        //    t.AddCondition((x, z) => x.AmountFlat.EquelsDouble(z.Account.Amount));
+            t.AddCustomComparer(new ArithmeticsComparer<TestType, AmountPerson>((x, z) =>
+         (x.AmountFlat).EquelsDouble((z.Account.Amount - z.Account.DiscountSumm))));
+               
+              
             Assert.IsTrue(t.Check());
         }
     }

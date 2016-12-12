@@ -11,6 +11,7 @@
     {
         public double Amount;
         public int AccountNumber { get; set; }
+        public  double DiscountSumm { get; set; }
     }
     public class AmountPerson
     {

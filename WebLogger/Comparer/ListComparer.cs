@@ -2,39 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices;
 using HtmlGenerator;
 
 namespace WebLogger.Comparer
 {
     public class ListComparer<TLeft, TRight>  
     {
-        private IEnumerable<TLeft> Lefts;
-        private IEnumerable<TRight> Rights;
-        readonly List<Comparer<TLeft, TRight>> Сonditions=new List<Comparer<TLeft, TRight>>();
+        private readonly IEnumerable<TLeft> _lefts;
+        private readonly IEnumerable<TRight> _rights;
+        readonly List<Comparer<TLeft, TRight>> _сonditions=new List<Comparer<TLeft, TRight>>();
         public ListComparer(IEnumerable<TLeft> left, IEnumerable<TRight> right)
         {
-            Lefts = left;
-            Rights = right;
+            _lefts = left;
+            _rights = right;
         }
 
         public bool Check()
         {
-            if (Lefts.Count() != Rights.Count())
+            if (_lefts.Count() != _rights.Count())
                 throw new IndexOutOfRangeException("Списки неравны");
-            if (!Lefts.Any())
+            if (!_lefts.Any())
                 throw new IndexOutOfRangeException("Списки пусты");
-            var tempL = Lefts.ToList();
-            var tempR = Rights.ToList();
-            Dictionary<TLeft, Dictionary<TRight, List<EquelsResult>>> result =
-                new Dictionary<TLeft, Dictionary<TRight, List<EquelsResult>>>();
-            foreach (var lItem in Lefts)
+            var result = new Dictionary<TLeft, Dictionary<TRight, List<EquelsResult>>>();
+            foreach (var lItem in _lefts)
             {
                 Dictionary<TRight, List<EquelsResult>> itemResult = new Dictionary<TRight, List<EquelsResult>>();
-                foreach (var rItem in Rights)
+                foreach (var rItem in _rights)
                 {
                     List<EquelsResult> equelsResults = new List<EquelsResult>();
-                    foreach (var condition in Сonditions)
+                    foreach (var condition in _сonditions)
                     {
                         equelsResults.Add(condition.Compare(lItem, rItem));
                     }
@@ -58,10 +54,7 @@ namespace WebLogger.Comparer
             foreach (var left in n)
             {
                 var trLeft = Tag.Tr;
-                if (left.AllCheck)
-                    trLeft.WithClass("good");
-                else
-                    trLeft.WithClass("bad");
+                trLeft.WithClass(left.AllCheck ? "good" : "bad");
                 trLeft.AddChild(Tag.Td.WithInnerText(left.Index.ToString()));
                 trLeft.AddChild(Tag.Td);
                 foreach (var c in left.condition)
@@ -81,14 +74,10 @@ namespace WebLogger.Comparer
                     {
                         trRight.AddChild(Tag.Td.WithInnerText(c.RightValue + " " + c.Result));
                     }
-                    if(right.AllCheck)
-                        trRight.WithClass("good");
-                    else 
-                        trRight.WithClass("bad");
+                    trRight.WithClass(right.AllCheck ? "good" : "bad");
                     table.AddChild(trRight);
                 }
             }
-
 
             d.Body.AddChild(table);
             var k = d.Serialize();
@@ -96,13 +85,12 @@ namespace WebLogger.Comparer
 
         public void AddCustomComparer(Comparer<TLeft, TRight> condition)
         {
-            Сonditions.Add(condition);
+            _сonditions.Add(condition);
         }
-
 
         public void AddCondition(Expression<Func<TLeft, TRight, bool>> condition)
         {
-            Сonditions.Add(new Comparer<TLeft, TRight>(condition));
+            _сonditions.Add(new Comparer<TLeft, TRight>(condition));
         }
     }
 }
